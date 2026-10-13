@@ -1,0 +1,35 @@
+{
+  "name": "sales-agent-imessage",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test test/*.test.ts",
+    "subscribe-webhook": "tsx --env-file=.env.local scripts/subscribe-webhook.ts",
+    "hydra:inspect": "tsx --env-file=.env.local scripts/hydra-inspect.ts",
+    "ask": "tsx --env-file=.env.local scripts/ask.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.133.0",
+    "@composio/core": "^0.23.0",
+    "@hydradb/sdk": "^2",
+    "@linqapp/sdk": "^0.78.0",
+    "@upstash/redis": "^1.39.0",
+    "next": "^16.4.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "standardwebhooks": "^1.1.1",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}

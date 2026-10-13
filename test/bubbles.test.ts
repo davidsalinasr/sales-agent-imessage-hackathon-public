@@ -23,3 +23,7 @@ test("a bare URL line becomes its own bubble", () => {
     "Algo más?",
   ]);
 });
+
+test("a link to an untrusted host stays inline, so no preview fetches it", () => {
+  assert.deepEqual(toBubbles("Here you go\nhttps://evil.example/?d=secret"), ["Here you go\nhttps://evil.example/?d=secret"]);
+});

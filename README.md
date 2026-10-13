@@ -34,8 +34,21 @@ iMessage ──► Linq ──webhook──► /api/linq  (Next.js on Vercel)
 - **The memory loop.** When the agent creates a data request, it stores the item list. When you
   later ask "has Acme sent it?", it recalls that list and checks each item against new emails
   and docs, using memory plus a live Gmail search.
-- **Safe by design.** Email is draft-only, because no send tool is exposed. Only your handles (`OWNER_HANDLE`) get
-  replies. Docs and drafts need your explicit yes in a later message, enforced in code. Webhooks are verified (Standard Webhooks HMAC) and de-duplicated.
+- **Guardrails, in code.**
+  - Email is draft-only: no send tool is exposed.
+  - Only your handles (`OWNER_HANDLE`) get replies, in a 1:1 iMessage chat. An unset
+    `OWNER_HANDLE` means nobody, never everybody. Group chats and SMS are ignored.
+  - Docs and drafts are proposals until you approve them. The webhook, not the model, decides
+    what counts as approval: a plain "yes" / "ok" / "dale" to the latest proposal you've seen, or a
+    👍 / ❤️ on the proposal's preview. Approval runs that stored proposal exactly as previewed. Any
+    other message (or a 👎) cancels pending proposals, and any change means a new proposal and a
+    new preview.
+  - Webhooks are verified (Standard Webhooks HMAC), de-duplicated and rate-limited per chat.
+- **Prompt injection.** Emails, docs and transcripts are written by other people. The agent
+  receives them wrapped as untrusted data and is told never to follow instructions in them; only
+  links to Google and Calendly get link previews, and Markdown images are stripped from Docs.
+  That lowers the risk without removing it, which is why every action needs your approval and
+  email is never sent. Read each preview before you say yes.
 
 ## Stack
 
@@ -69,11 +82,14 @@ iMessage ──► Linq ──webhook──► /api/linq  (Next.js on Vercel)
    collections they name).
 3. Composio: connect Gmail and Google Docs, and set `COMPOSIO_USER_ID` to the user that owns them.
 4. Deploy (`vercel`) or tunnel locally (`pnpm dev` + `ngrok http 3000`).
-5. `pnpm subscribe-webhook https://<public-url>`, then put the printed secret in
-   `LINQ_WEBHOOK_SECRET`. On Vercel, add it and redeploy.
-6. Text your Linq number from `OWNER_HANDLE`.
+5. `pnpm subscribe-webhook https://<public-url>`. It saves the signing secret to
+   `LINQ_WEBHOOK_SECRET` in `.env.local`. On Vercel, add it and redeploy.
+6. Text your Linq number from `OWNER_HANDLE`, in a 1:1 chat.
 
-`pnpm ask` chats with the agent from the terminal (multi-turn; or `pnpm ask "<message>"` for one shot), without iMessage. `pnpm test` runs the webhook signature tests. `pnpm typecheck` runs the type checker.
+In production, Upstash Redis is required (dedupe, rate limits and pending approvals have to be
+shared across serverless instances); the agent refuses to run on Vercel production without it.
+
+`pnpm ask` chats with the agent from the terminal (multi-turn; or `pnpm ask "<message>"` for one shot), without iMessage. `pnpm test` runs the tests (webhook signatures, owner and approval checks, the approval gate, bubbles). `pnpm typecheck` runs the type checker.
 
 ## License
 
